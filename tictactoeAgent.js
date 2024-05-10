@@ -4,77 +4,89 @@ class Agent {
 
     }
 
+    // board.gameOver()
+    // -Returns 0 if game is not over
+    // -Returns 1 if X wins
+    // -Returns 2 if O wins
+    // -Returns 3 if Draw
+
+    //board.cellFree(int cell)
+    // -Cell is an integer from 1 to 9 that represents the cells on the game board
+    // -Returns True if no move has been played on that cell
+    // -Returns False if otherwise
+
+    //board.clone()
+    // -Returns a copy of the current board
+
+    //board.move(int cell)
+    // -Performs a move on the given cell
+    // -Places an X or an O based on whose move it is currently
+
     minimax(board, isMaximizing) {
-        // Base cases - check if the game is over or a draw
-        var gameOver = board.gameOver();
-        if (gameOver === 1) {
-            return 1; // X wins
-        } else if (gameOver === 2) {
-            return -1; // O wins
-        } else if (gameOver === 3) {
-            return 0; // the game is a draw
+        //Base case - return a value if anyone has won the game
+
+        switch(board.gameOver()) {
+            case 0: // Game is not over
+                break;
+            case 1: // X Wins
+                return 1;
+            case 2: // O Wins
+                return -1;
+            case 3: // Draw
+                return 0;
+        }
+        
+        let best_value = null
+
+        // Iterate through all possible moves
+        for (let cell = 1; cell <= 9; cell++) {
+            // Continue if the cell isn't free
+            if (!board.cellFree(cell)) {
+                continue;
+            }
+
+            // Clone the board and make a move on the current cell
+            let new_board = board.clone();
+            new_board.move(cell)
+            
+            // Calculate the minimax of this sub-board
+            let new_value = this.minimax(new_board, !isMaximizing)
+
+            // Update the max/min based on if we are maximizing or not
+            if (best_value === null || (isMaximizing && new_value > best_value) || (!isMaximizing && new_value < best_value)) {
+                best_value = new_value;
+            }
         }
 
-        // Recursive case - evaluate all possible moves and choose the best score
-        if (isMaximizing) {
-            var bestScore = -Infinity;
-            for (var i = 0; i < board.cells.length; i++) {
-                var cell = i + 1;
-                if (board.cellFree(cell)) {
-                    var newBoard = board.clone();
-                    newBoard.move(cell);
-                    var score = this.minimax(newBoard, false);
-                    bestScore = Math.max(bestScore, score);
-                }
-            }
-            return bestScore;
-        } else {
-            var bestScore = Infinity;
-            for (var i = 0; i < board.cells.length; i++) {
-                var cell = i + 1;
-                if (board.cellFree(cell)) {
-                    var newBoard = board.clone();
-                    newBoard.move(cell);
-                    var score = this.minimax(newBoard, true);
-                    bestScore = Math.min(bestScore, score);
-                }
-            }
-            return bestScore;
-        }
+        return best_value;
     }
 
     selectMove(board) {
-        // Define the initial best score and move
-        var maxScore = -Infinity;
-        var maxMove = null;
+        let best_value = null;
+        let best_move = null;
+        
+        // Iterate through all possible moves
+        for (let cell = 1; cell <= 9; cell++) {
+            // Continue if the cell isn't free
+            if (!board.cellFree(cell)) {
+                continue;
+            }
 
-        var minScore = Infinity;
-        var minMove = null;
+            // Clone the board and make a move
+            let new_board = board.clone()
+            new_board.move(cell)
 
-        // Loop through each cell to evaluate the best move
-        for (var i = 0; i < board.cells.length; i++) {
-            var cell = i + 1;
-            if (board.cellFree(cell)) {
-                // Make a move on the current cell
-                var newBoard = board.clone();
-                newBoard.move(cell);
+            // Calculate the minimax of this sub-board
+            let new_value = this.minimax(new_board, !board.playerOne)
 
-                // Calculate the score for the current move
-                var score = this.minimax(newBoard, !board.playerOne);
-
-                // Update the best move if the current move has a higher score
-                if (score > maxScore) {
-                    maxScore = score;
-                    maxMove = cell;
-                }
-                if (score < minScore) {
-                    minScore = score;
-                    minMove = cell;
-                }
+            // Update the max/min and best move based on if we are maximizing or not
+            if (best_value === null || (board.playerOne && new_value > best_value) || (!board.playerOne && new_value < best_value)) {
+                best_value = new_value;
+                best_move = cell;
             }
         }
 
-        return board.playerOne ? maxMove : minMove;
+        return best_move;
     }
 
 }
